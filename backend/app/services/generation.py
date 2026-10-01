@@ -101,9 +101,7 @@ def generate_screening(match: MatchResult, count: int = 6) -> dict:
 def _demo_outreach(match: MatchResult) -> dict:
     strengths, gaps = _gap_and_strength_lines(match)
     highlight = strengths[0].label if strengths else None
-    highlight_clause = (
-        highlight.split("(")[0].strip().rstrip(".").lower() if highlight else None
-    )
+    highlight_clause = highlight.split("(")[0].strip().rstrip(".").lower() if highlight else None
     lines = [
         f"Hi {match.candidate_name.split()[0]},",
         "",

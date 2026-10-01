@@ -15,8 +15,11 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
 RUN uv sync --frozen --no-dev
 
+# Make the venv the default interpreter so the documented DX works as-is:
+#   docker compose exec api python -m app.seed
+ENV PATH="/app/.venv/bin:$PATH"
+
 EXPOSE 8000
 
-# Migrate on boot, then serve. Seeding stays an explicit, opt-in step:
-#   docker compose exec api uv run python -m app.seed [--reset]
-CMD ["sh", "-c", "uv run --no-dev alembic upgrade head && uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# Migrate on boot, then serve. Seeding stays an explicit, opt-in step.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

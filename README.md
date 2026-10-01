@@ -6,14 +6,15 @@ The agent reads, explains and proposes. Humans decide. Every consequential actio
 ```bash
 git clone https://github.com/<you>/recruitagent-ai.git   # or Code → Download ZIP
 cd recruitagent-ai
+cp .env.example .env
 docker compose up --build -d
-docker compose exec api uv run python -m app.seed         # one-time demo data
+docker compose exec api python -m app.seed               # one-time demo data
 # open http://localhost:3000
 ```
 
 That gives you the full system — agent chat, live tool trace, candidate & job workspaces, approvals, activity audit and health — running against a synthetic dataset (20 fictional candidates, 5 roles). Nothing else to install, nothing to configure, no key required.
 
-> ⚠️ **Local demo, no auth by design.** Never point it at real candidate data or expose it publicly — see [SECURITY.md](docs/SECURITY.md). The staged migration path to production posture is in [ROADMAP.md](ROADMAP.md).
+> ⚠️ **Local demo, no auth by design.** Never point it at real candidate data or expose it publicly — see [SECURITY.md](SECURITY.md). The staged migration path to production posture is in [ROADMAP.md](ROADMAP.md).
 
 ---
 

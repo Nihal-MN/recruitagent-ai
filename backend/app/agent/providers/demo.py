@@ -35,13 +35,46 @@ def _strip_md(text: str) -> str:
 
 
 PROTECTED_TERMS = (
-    "female", "male ", "gender", "woman", "women", "man ", "men ",
-    " age", "age:", "years old", "young", "oldest", "youngest",
-    "nationality", "ethnicity", "ethnic", "race ", "racial",
-    "religion", "religious", "muslim", "christian", "hindu", "jewish",
-    "married", "unmarried", "single ", "pregnant", "children", "kids",
-    "disab", "visa status", "photo", "picture", "headshot",
-    "white ", "black ", "arab ", "indian ", "asian ",
+    "female",
+    "male ",
+    "gender",
+    "woman",
+    "women",
+    "man ",
+    "men ",
+    " age",
+    "age:",
+    "years old",
+    "young",
+    "oldest",
+    "youngest",
+    "nationality",
+    "ethnicity",
+    "ethnic",
+    "race ",
+    "racial",
+    "religion",
+    "religious",
+    "muslim",
+    "christian",
+    "hindu",
+    "jewish",
+    "married",
+    "unmarried",
+    "single ",
+    "pregnant",
+    "children",
+    "kids",
+    "disab",
+    "visa status",
+    "photo",
+    "picture",
+    "headshot",
+    "white ",
+    "black ",
+    "arab ",
+    "indian ",
+    "asian ",
 )
 
 
@@ -78,7 +111,12 @@ class DemoProvider:
                 )
             return StepDecision(final_text=self._no_job_found(msg))
 
-        if len(obs) == 2 and obs[0].tool == "search_jobs" and obs[1].tool == "get_job" and obs[1].ok:
+        if (
+            len(obs) == 2
+            and obs[0].tool == "search_jobs"
+            and obs[1].tool == "get_job"
+            and obs[1].ok
+        ):
             return StepDecision(final_text=self._job_overview(obs[1]))
 
         if len(obs) == 2 and obs[0].tool == "search_jobs" and obs[1].tool == "search_candidates":
@@ -135,7 +173,10 @@ class DemoProvider:
                     return StepDecision(
                         tool_call=ToolCall(
                             "generate_screening_questions",
-                            {"candidate_id": data.get("candidate_id"), "job_id": data.get("job_id")},
+                            {
+                                "candidate_id": data.get("candidate_id"),
+                                "job_id": data.get("job_id"),
+                            },
                         )
                     )
                 return StepDecision(final_text=self._match_explanation(obs[1]))

@@ -79,9 +79,16 @@ def test_function_call_becomes_tool_call(monkeypatch):
     sent = client.responses.calls[0]
     tool_names = {t["name"] for t in sent["tools"]}
     assert tool_names == {
-        "search_candidates", "get_candidate", "search_jobs", "get_job",
-        "match_candidate", "get_pipeline", "generate_screening_questions",
-        "draft_outreach", "update_pipeline", "add_candidate_note",
+        "search_candidates",
+        "get_candidate",
+        "search_jobs",
+        "get_job",
+        "match_candidate",
+        "get_pipeline",
+        "generate_screening_questions",
+        "draft_outreach",
+        "update_pipeline",
+        "add_candidate_note",
     }
     assert "untrusted" in sent["instructions"].lower()
 

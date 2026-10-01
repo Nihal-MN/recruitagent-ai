@@ -11,7 +11,7 @@ down: ## Stop the stack (keeps the database volume)
 	docker compose down
 
 seed: ## (Re)seed the synthetic demo dataset — 20 candidates / 5 jobs
-	docker compose exec api uv run --no-dev python -m app.seed --reset
+	docker compose exec api python -m app.seed --reset
 
 reset: ## Stop the stack and DELETE the database volume
 	docker compose down -v

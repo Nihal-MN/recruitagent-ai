@@ -45,7 +45,7 @@ def _flag_error(result) -> bool:
         if value is not None:
             return bool(value)
     for item in getattr(result, "content", []) or []:
-        text = (getattr(item, "text", "") or "")
+        text = getattr(item, "text", "") or ""
         if text.startswith("Error") or "validation_error" in text:
             return True
     return False
@@ -99,9 +99,7 @@ async def _run_smoke(db_url: str) -> dict:
             job_payload = _payload(job)
             results["job"] = job_payload
 
-            match = await session.call_tool(
-                "match_candidate", {"candidate_id": 1, "job_id": 1}
-            )
+            match = await session.call_tool("match_candidate", {"candidate_id": 1, "job_id": 1})
             results["match"] = _payload(match)
 
             bad = await session.call_tool("search_candidates", {"limit": 999})

@@ -42,9 +42,7 @@ def _propose_move(db, candidate, job, stage="INTERVIEW"):
 
 def _stage_moved_events(db) -> int:
     return (
-        db.scalar(
-            select(func.count(ActivityEvent.id)).where(ActivityEvent.type == "stage_moved")
-        )
+        db.scalar(select(func.count(ActivityEvent.id)).where(ActivityEvent.type == "stage_moved"))
         or 0
     )
 

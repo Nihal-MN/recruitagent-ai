@@ -161,8 +161,18 @@ def test_no_protected_columns_in_schema():
     from app.db.base import Base
 
     forbidden = (
-        "age", "gender", "sex", "ethnic", "race", "religion", "disab",
-        "marital", "photo", "national_id", "dob", "birth",
+        "age",
+        "gender",
+        "sex",
+        "ethnic",
+        "race",
+        "religion",
+        "disab",
+        "marital",
+        "photo",
+        "national_id",
+        "dob",
+        "birth",
     )
     for table in Base.metadata.tables.values():
         for column in table.columns:

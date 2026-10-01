@@ -14,9 +14,7 @@ router = APIRouter()
 
 
 @router.get("/activity", response_model=list[ActivityOut], summary="Audit trail (newest first)")
-def list_activity(
-    db: DbSession, limit: int = Query(100, ge=1, le=500)
-) -> list[ActivityOut]:
+def list_activity(db: DbSession, limit: int = Query(100, ge=1, le=500)) -> list[ActivityOut]:
     rows = db.scalars(select(ActivityEvent).order_by(ActivityEvent.id.desc()).limit(limit))
     return [ActivityOut.model_validate(e, from_attributes=True) for e in rows]
 

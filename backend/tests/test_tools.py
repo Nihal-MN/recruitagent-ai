@@ -38,7 +38,9 @@ def test_write_tools_require_approval(db):
 
 
 def test_search_candidates_skill_filter(db):
-    outcome = execute_tool(db, "search_candidates", {"skill": "kubernetes", "limit": 10}, ToolContext())
+    outcome = execute_tool(
+        db, "search_candidates", {"skill": "kubernetes", "limit": 10}, ToolContext()
+    )
     assert outcome.ok and outcome.result is not None
     names = [c["full_name"] for c in outcome.result["candidates"]]
     assert "Chen Wei" in names and "Mia Chen" in names
@@ -51,9 +53,7 @@ def test_search_candidates_ranked_by_job(db):
     from app.models import Job
 
     job = db.scalar(select(Job).where(Job.title == "Senior Backend Engineer"))
-    outcome = execute_tool(
-        db, "search_candidates", {"job_id": job.id, "limit": 5}, ToolContext()
-    )
+    outcome = execute_tool(db, "search_candidates", {"job_id": job.id, "limit": 5}, ToolContext())
     assert outcome.ok and outcome.result is not None
     scores = [c["match_score"] for c in outcome.result["candidates"]]
     assert scores == sorted(scores, reverse=True)
@@ -76,7 +76,9 @@ def test_malformed_arguments_are_rejected(db):
     outcome = execute_tool(db, "search_candidates", {"limit": 999}, ToolContext())
     assert not outcome.ok and outcome.error_code == "validation_error"
 
-    wrong_type = execute_tool(db, "match_candidate", {"candidate_id": "x", "job_id": 1}, ToolContext())
+    wrong_type = execute_tool(
+        db, "match_candidate", {"candidate_id": "x", "job_id": 1}, ToolContext()
+    )
     assert not wrong_type.ok and wrong_type.error_code == "validation_error"
 
 

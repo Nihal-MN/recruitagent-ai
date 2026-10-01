@@ -55,7 +55,13 @@ def test_full_agent_flow_over_api(client):
 
     activity = client.get("/api/v1/activity?limit=20").json()
     types = [e["type"] for e in activity]
-    for expected in ("conversation_started", "approval_requested", "approval_approved", "stage_moved"):
+    expected_types = (
+        "conversation_started",
+        "approval_requested",
+        "approval_approved",
+        "stage_moved",
+    )
+    for expected in expected_types:
         assert expected in types
 
 

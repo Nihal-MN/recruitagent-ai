@@ -20,8 +20,25 @@ class ErrorCode(StrEnum):
 class AppError(Exception):
     """Raised by services/tools to produce a structured error."""
 
+    #: code → HTTP status for the API layer
+    HTTP_STATUS = {
+        ErrorCode.entity_not_found: 404,
+        ErrorCode.ambiguous_entity: 409,
+        ErrorCode.validation_error: 422,
+        ErrorCode.approval_required: 409,
+        ErrorCode.approval_rejected: 409,
+        ErrorCode.tool_failed: 500,
+        ErrorCode.provider_unavailable: 503,
+        ErrorCode.max_steps_exceeded: 429,
+        ErrorCode.policy_blocked: 409,
+    }
+
     def __init__(self, code: ErrorCode, message: str, detail: str | None = None) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
         self.detail = detail
+
+    @property
+    def http_status(self) -> int:
+        return self.HTTP_STATUS.get(self.code, 400)

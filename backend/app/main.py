@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __version__
-from app.api.routes import health
+from app.api.routes import approvals, conversations, health, people, transparency
 from app.core.config import get_settings
 from app.core.errors import AppError
 
@@ -37,13 +37,17 @@ def create_app() -> FastAPI:
     @app.exception_handler(AppError)
     async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
         return JSONResponse(
-            status_code=exc.status_code if hasattr(exc, "status_code") else 409,
+            status_code=exc.http_status,
             content={
                 "error": {"code": exc.code.value, "message": exc.message, "detail": exc.detail}
             },
         )
 
     app.include_router(health.router, prefix="/api/v1", tags=["system"])
+    app.include_router(conversations.router, prefix="/api/v1", tags=["agent"])
+    app.include_router(approvals.router, prefix="/api/v1", tags=["approvals"])
+    app.include_router(transparency.router, prefix="/api/v1", tags=["transparency"])
+    app.include_router(people.router, prefix="/api/v1", tags=["directory"])
 
     return app
 

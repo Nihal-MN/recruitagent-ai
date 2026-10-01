@@ -23,7 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.agent.providers.base import AgentState, Observation, Provider
-from app.core.errors import ErrorCode
+from app.core.errors import AppError, ErrorCode
 from app.models import (
     AgentConversation,
     ApprovalStatus,
@@ -32,7 +32,6 @@ from app.models import (
 )
 from app.services import approvals as approvals_service
 from app.services import conversations as conversations_service
-from app.services import pipeline as pipeline_service
 from app.tools.executor import execute_tool
 from app.tools.registry import get_tool, sanitize_args
 
@@ -98,34 +97,7 @@ def _context_meta(args: dict, result: dict | None) -> dict:
 
 
 def _approval_summary(db: Session, tool_name: str, params: dict) -> str:
-    if tool_name == "update_pipeline":
-        candidate_name = f"candidate #{params['candidate_id']}"
-        job_name = f"job #{params['job_id']}"
-        from app.models import Candidate, Job
-
-        candidate = db.get(Candidate, params["candidate_id"])
-        job = db.get(Job, params["job_id"])
-        if candidate:
-            candidate_name = candidate.full_name
-        if job:
-            job_name = job.title
-        application = pipeline_service.find_application(
-            db, params["candidate_id"], params["job_id"]
-        )
-        target_stage = str(params["to_stage"]).upper()
-        if application is None:
-            return f"Add {candidate_name} to '{job_name}' pipeline at {target_stage}."
-        note = f" (note: {params['note']})" if params.get("note") else ""
-        return f"Move {candidate_name} — '{job_name}': {application.stage} → {target_stage}{note}."
-    if tool_name == "add_candidate_note":
-        from app.models import Candidate
-
-        candidate = db.get(Candidate, params["candidate_id"])
-        name = candidate.full_name if candidate else f"candidate #{params['candidate_id']}"
-        body = str(params["body"])
-        snippet = body[:120] + ("…" if len(body) > 120 else "")
-        return f"Add note to {name}: “{snippet}”"
-    return f"Execute {tool_name}."
+    return approvals_service.describe_action(db, tool_name, params)
 
 
 def _trace(
@@ -195,7 +167,23 @@ def run_turn(
     for step in range(1, max_steps + 1):
         state.step = step
         state.tool_calls_made = tool_calls_made
-        decision = provider.next_step(state)
+        try:
+            decision = provider.next_step(state)
+        except AppError as exc:
+            outcome.final_text = (
+                f"I couldn't reach the AI provider ({exc.code.value}). {exc.message} "
+                "Nothing was executed — try again shortly."
+            )
+            outcome.stopped_reason = "provider_unavailable"
+            outcome.error_code = exc.code.value
+            break
+        except Exception:
+            outcome.final_text = (
+                "The provider failed unexpectedly. Nothing was executed — your data is unchanged."
+            )
+            outcome.stopped_reason = "provider_unavailable"
+            outcome.error_code = ErrorCode.provider_unavailable.value
+            break
 
         if decision.final_text is not None:
             outcome.final_text = decision.final_text.strip()

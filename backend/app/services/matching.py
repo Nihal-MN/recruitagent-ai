@@ -186,11 +186,8 @@ def _evaluate_requirement(candidate: Candidate, requirement) -> RequirementResul
 
     if category == "domain":
         keywords = requirement.keywords or []
-        haystack = " ".join(
-            part for part in [candidate.headline, candidate.summary, candidate.resume_text] if part
-        )
         for keyword in keywords:
-            line = _resume_line_for(keyword, haystack)
+            line = _resume_line_for(keyword, candidate.resume_text)
             if line:
                 return RequirementResult(
                     requirement.id,
@@ -201,6 +198,17 @@ def _evaluate_requirement(candidate: Candidate, requirement) -> RequirementResul
                     f"Domain evidence found: '{keyword}'.",
                     [Evidence(line, "resume_line")],
                 )
+        summary_text = (candidate.summary or "").lower()
+        if summary_text and any(keyword.lower() in summary_text for keyword in keywords):
+            return RequirementResult(
+                requirement.id,
+                kind,
+                category,
+                requirement.label,
+                "met",
+                "Domain signal found on the profile summary.",
+                [Evidence((candidate.summary or "")[:220], "profile")],
+            )
         return RequirementResult(
             requirement.id,
             kind,

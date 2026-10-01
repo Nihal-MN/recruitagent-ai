@@ -34,6 +34,17 @@ def _strip_md(text: str) -> str:
     return text.strip().strip(". \t").rstrip("\n")
 
 
+PROTECTED_TERMS = (
+    "female", "male ", "gender", "woman", "women", "man ", "men ",
+    " age", "age:", "years old", "young", "oldest", "youngest",
+    "nationality", "ethnicity", "ethnic", "race ", "racial",
+    "religion", "religious", "muslim", "christian", "hindu", "jewish",
+    "married", "unmarried", "single ", "pregnant", "children", "kids",
+    "disab", "visa status", "photo", "picture", "headshot",
+    "white ", "black ", "arab ", "indian ", "asian ",
+)
+
+
 class DemoProvider:
     name = "demo"
 
@@ -49,20 +60,32 @@ class DemoProvider:
         if last is not None and not last.ok:
             return StepDecision(final_text=self._explain_error(last))
 
+        # Protected-characteristic guard: refuse such filtering/ranking requests
+        # outright — there is no data path for them anywhere in the system.
+        if len(obs) == 0 and self._is_protected_request(low):
+            return StepDecision(final_text=self._protected_refusal())
+
         # ---- staged flows -------------------------------------------------
         if len(obs) == 1 and obs[0].tool == "search_jobs" and obs[0].ok:
             jobs = (obs[0].data or {}).get("jobs") or []
             if jobs:
+                if self._is_job_question(low) and not self._wants_find(low):
+                    return StepDecision(
+                        tool_call=ToolCall("get_job", {"identifier": str(jobs[0]["id"])})
+                    )
                 return StepDecision(
                     tool_call=ToolCall("search_candidates", {"job_id": jobs[0]["id"], "limit": 8})
                 )
             return StepDecision(final_text=self._no_job_found(msg))
 
+        if len(obs) == 2 and obs[0].tool == "search_jobs" and obs[1].tool == "get_job" and obs[1].ok:
+            return StepDecision(final_text=self._job_overview(obs[1]))
+
         if len(obs) == 2 and obs[0].tool == "search_jobs" and obs[1].tool == "search_candidates":
             return StepDecision(final_text=self._find_summary(obs))
 
         if len(obs) == 1 and obs[0].tool == "get_candidate" and obs[0].ok:
-            if self._wants_match(low):
+            if self._wants_explain(low):
                 candidate = (obs[0].data or {}).get("id")
                 job_id = self._context_job_id(state)
                 if candidate and job_id:
@@ -107,6 +130,14 @@ class DemoProvider:
         # Two-step flows that started with a candidate lookup (get_candidate → X).
         if len(obs) == 2 and obs[0].tool == "get_candidate" and obs[1].ok:
             if obs[1].tool == "match_candidate":
+                if self._wants_screening(low):
+                    data = obs[1].data or {}
+                    return StepDecision(
+                        tool_call=ToolCall(
+                            "generate_screening_questions",
+                            {"candidate_id": data.get("candidate_id"), "job_id": data.get("job_id")},
+                        )
+                    )
                 return StepDecision(final_text=self._match_explanation(obs[1]))
             if obs[1].tool == "generate_screening_questions":
                 return StepDecision(final_text=self._screening_answer(obs[1]))
@@ -114,6 +145,17 @@ class DemoProvider:
                 return StepDecision(final_text=self._outreach_answer(obs[1]))
             if obs[1].tool in ("update_pipeline", "add_candidate_note"):
                 return StepDecision(final_text=self._approval_answer(obs[1]))
+
+        # Three-step multi-tool flow: get_candidate → match → screening.
+        if (
+            len(obs) == 3
+            and obs[1].tool == "match_candidate"
+            and obs[2].tool == "generate_screening_questions"
+            and obs[2].ok
+        ):
+            return StepDecision(
+                final_text=self._match_line(obs[1]) + "\n\n" + self._screening_answer(obs[2])
+            )
 
         if len(obs) == 1 and obs[0].tool == "generate_screening_questions" and obs[0].ok:
             return StepDecision(final_text=self._screening_answer(obs[0]))
@@ -133,6 +175,11 @@ class DemoProvider:
                 return StepDecision(final_text=self._intro())
             if self._is_pipeline_question(low):
                 return StepDecision(tool_call=ToolCall("get_pipeline", self._pipeline_args(state)))
+            if self._is_job_question(low):
+                role = self._extract_role(msg)
+                return StepDecision(
+                    tool_call=ToolCall("search_jobs", {"query": role or msg[:80], "limit": 5})
+                )
             if self._wants_move(low):
                 return self._propose_move(state)
             if self._wants_note(low):
@@ -164,6 +211,17 @@ class DemoProvider:
 
     # ── intent helpers ───────────────────────────────────────────────────────
 
+    def _is_protected_request(self, low: str) -> bool:
+        return any(term in f" {low} " for term in PROTECTED_TERMS)
+
+    def _protected_refusal(self) -> str:
+        return (
+            "I can't filter, rank or search by protected characteristics (age, gender, "
+            "nationality, ethnicity, religion, disability, marital or family status, or "
+            "photos) — the system has no such data, by design, and I won't infer it. "
+            "I can search on role-related criteria: skills, experience, domain and location."
+        )
+
     def _is_greeting(self, low: str) -> bool:
         return bool(re.match(r"^\s*(hi|hello|hey|good (morning|afternoon|evening))\b", low))
 
@@ -178,6 +236,10 @@ class DemoProvider:
             bool(re.search(r"\bwhy\b|\bmatch\b|\bexplain\b|\bfit\b", low))
             and "screening" not in low
         )
+
+    def _wants_explain(self, low: str) -> bool:
+        # Explanation intent even when the same message also asks for screening.
+        return bool(re.search(r"\bwhy\b|\bmatch\b|\bexplain\b|\bfit\b", low))
 
     def _wants_screening(self, low: str) -> bool:
         return "screening" in low or "interview questions" in low or "questions" in low
@@ -194,6 +256,13 @@ class DemoProvider:
     def _is_pipeline_question(self, low: str) -> bool:
         return "pipeline" in low or "board" in low
 
+    def _is_job_question(self, low: str) -> bool:
+        return (
+            "candidate" not in low
+            and bool(re.search(r"\b(about|details?|info(?:rmation)?|overview)\b", low))
+            and bool(re.search(r"\b(role|job|position|opening)\b", low))
+        )
+
     def _wants_skill_search(self, low: str) -> bool:
         return bool(re.search(r"\b(with|who know|knows)\b", low)) and "candidate" in low
 
@@ -208,7 +277,7 @@ class DemoProvider:
     def _extract_name(self, msg: str) -> str | None:
         # Triggered single-word names: "show me Alex", "open Layla", "profile of Chen".
         trigger = re.search(
-            r"\b(?:show(?:\s+me)?|get|open|view|profile(?:\s+of)?|about|find)\s+"
+            r"\b(?:show(?:\s+me)?|get|open|view|profile(?:\s+of)?)\s+"
             r"(?:the\s+)?(?:candidate\s+)?([A-Z][a-z]{2,})\b",
             msg,
         )
@@ -364,6 +433,35 @@ class DemoProvider:
             f"I couldn't find a job matching *{role}* in the system, so I won't guess — "
             "no candidates were invented. Check the Jobs page for the exact open roles, "
             "or give me the full title."
+        )
+
+    def _job_overview(self, obs: Observation) -> str:
+        d = obs.data or {}
+        musts = [r for r in (d.get("requirements") or []) if r.get("kind") == "must_have"]
+        prefs = [r for r in (d.get("requirements") or []) if r.get("kind") == "preferred"]
+        lines = [
+            f"**{d.get('title')}** — {d.get('company') or ''}".rstrip(" —"),
+            f"{d.get('location') or 'Location n/a'} · {d.get('seniority') or 'n/a'} · "
+            f"{d.get('applications_count', 0)} application(s) in pipeline",
+            "",
+            f"Must-haves ({len(musts)}):",
+        ]
+        lines.extend(f"• {r['label']}" for r in musts[:8])
+        if prefs:
+            lines.append(f"Preferred ({len(prefs)}):")
+            lines.extend(f"• {r['label']}" for r in prefs[:5])
+        lines.append("")
+        lines.append(
+            "Ask me to find candidates for this role, explain a specific match, "
+            "or draft screening questions."
+        )
+        return "\n".join(lines)
+
+    def _match_line(self, obs: Observation) -> str:
+        d = obs.data or {}
+        return (
+            f"**{d.get('candidate_name')}** vs **{d.get('job_title')}**: "
+            f"**{d.get('score')}/100** — `{d.get('formula')}`"
         )
 
     def _find_summary(self, obs: list[Observation]) -> str:

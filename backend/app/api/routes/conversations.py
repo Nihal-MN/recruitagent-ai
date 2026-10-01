@@ -6,18 +6,18 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
 
 from app.agent.orchestrator import run_turn
+from app.agent.providers import get_provider
 from app.api.deps import DbSession
 from app.api.schemas import (
+    ApprovalOut,
     ConversationCreate,
     ConversationDetail,
     ConversationOut,
     MessageIn,
     MessageOut,
     ToolExecutionOut,
-    ApprovalOut,
     TurnResult,
 )
-from app.agent.providers import get_provider
 from app.core.errors import AppError
 from app.models import (
     AgentConversation,
@@ -102,7 +102,9 @@ def conversation_detail(conversation_id: int, db: DbSession) -> ConversationDeta
     return ConversationDetail(
         **base.model_dump(),
         messages=[MessageOut.model_validate(m, from_attributes=True) for m in messages],
-        tool_executions=[ToolExecutionOut.model_validate(e, from_attributes=True) for e in executions],
+        tool_executions=[
+            ToolExecutionOut.model_validate(e, from_attributes=True) for e in executions
+        ],
         approvals=[ApprovalOut.model_validate(a, from_attributes=True) for a in approvals],
     )
 

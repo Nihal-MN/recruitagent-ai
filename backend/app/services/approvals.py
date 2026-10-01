@@ -97,6 +97,41 @@ def create_or_get_request(
     return request, True
 
 
+def describe_action(db: Session, tool_name: str, args: dict) -> str:
+    """Human-readable 'what will change' summary for an approval request."""
+    if tool_name == "update_pipeline":
+        candidate_name = f"candidate #{args.get('candidate_id')}"
+        job_name = f"job #{args.get('job_id')}"
+        from app.models import Candidate, Job
+        from app.services import pipeline as pipeline_service
+
+        candidate = db.get(Candidate, args.get("candidate_id"))
+        job = db.get(Job, args.get("job_id"))
+        if candidate:
+            candidate_name = candidate.full_name
+        if job:
+            job_name = job.title
+        application = (
+            pipeline_service.find_application(db, args["candidate_id"], args["job_id"])
+            if args.get("candidate_id") and args.get("job_id")
+            else None
+        )
+        target_stage = str(args.get("to_stage", "")).upper()
+        if application is None:
+            return f"Add {candidate_name} to '{job_name}' pipeline at {target_stage}."
+        note = f" (note: {args['note']})" if args.get("note") else ""
+        return f"Move {candidate_name} — '{job_name}': {application.stage} → {target_stage}{note}."
+    if tool_name == "add_candidate_note":
+        from app.models import Candidate
+
+        candidate = db.get(Candidate, args.get("candidate_id"))
+        name = candidate.full_name if candidate else f"candidate #{args.get('candidate_id')}"
+        body = str(args.get("body", ""))
+        snippet = body[:120] + ("…" if len(body) > 120 else "")
+        return f"Add note to {name}: “{snippet}”"
+    return f"Execute {tool_name}."
+
+
 def get_request(db: Session, request_id: int) -> ApprovalRequest:
     request = db.get(ApprovalRequest, request_id)
     if request is None:

@@ -237,12 +237,14 @@ def _add_candidate_note(db: Session, params: AddCandidateNoteInput, ctx: ToolCon
     candidate = db.get(Candidate, params.candidate_id)
     if candidate is None:
         raise AppError(ErrorCode.entity_not_found, f"No candidate with id {params.candidate_id}.")
+    # This tool only executes via the approval flow: the content is agent-authored,
+    # so the note is always marked source=agent — with the approver recorded as author.
     note = notes_service.add_note(
         db,
         candidate,
         params.body,
-        source="agent" if ctx.actor != "recruiter" else "recruiter",
-        author="recruiting agent" if ctx.actor != "recruiter" else "recruiter",
+        source="agent",
+        author=f"agent (approved by {ctx.actor})" if ctx.actor else "agent",
         approval_id=ctx.approval_id,
     )
     return {

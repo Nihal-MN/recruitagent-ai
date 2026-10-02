@@ -27,6 +27,22 @@ AI recruiting tools usually fail in one of two ways: they either answer from thi
 - **Untrusted content stays data.** Resumes, JDs and notes can contain anything — including instructions aimed at the model. They are treated as data, never as commands.
 - **No protected characteristics. Ever.** Matching uses skills, experience and domain evidence only; the schema itself stores nothing else, and a test enforces that.
 
+## Screenshots
+
+| Agent chat with live tool trace | Explainable match, evidence-quoted | The approval gate |
+|---|---|---|
+| ![Agent chat](docs/screenshots/01_agent_chat_find.png) | ![Match explanation](docs/screenshots/04_match_explanation.png) | ![Pending approval](docs/screenshots/06_pending_approval.png) |
+
+| Reject → zero mutation | Approve → executed exactly once | Append-only activity audit |
+|---|---|---|
+| ![Rejected](docs/screenshots/08_approvals_rejected.png) | ![Executed](docs/screenshots/09_approved_executed.png) | ![Activity](docs/screenshots/12_activity.png) |
+
+| Hostile resume instruction — still gated | Tool trace (no chain-of-thought) | System health — honest AI mode |
+|---|---|---|
+| ![Injection gated](docs/screenshots/13_injection_still_gated.png) | ![Tool trace](docs/screenshots/03_tool_trace.png) | ![Health](docs/screenshots/02_system_health.png) |
+
+More: [candidates](docs/screenshots/15_candidates.png) · [candidate detail with evidence](docs/screenshots/16_candidate_detail.png) · [jobs](docs/screenshots/17_jobs.png) · [job requirements](docs/screenshots/18_job_detail.png) · [screening questions](docs/screenshots/05_screening_questions.png) · [note workflow](docs/screenshots/10_note_approval.png).
+
 ## What you can do in the demo
 
 | Ask the agent | What happens |
@@ -60,11 +76,11 @@ More detail: [ARCHITECTURE.md](docs/ARCHITECTURE.md) · [AGENT_DESIGN.md](docs/A
 ## Testing & evals
 
 ```bash
-make test            # backend: 73 hermetic tests incl. the eval suite and an MCP stdio smoke test
+make test            # backend: 74 hermetic tests incl. the eval suite and an MCP stdio smoke test
 make test-frontend   # frontend: unit tests
 ```
 
-The behavioral suite (**docs/EVALUATIONS.md**) covers 22 named scenarios — grounding, tool selection, nonexistent/ambiguous entities, malformed arguments, unknown tools, step bounds, approval flows (reject = no mutation, approve = exactly once, replay = no-op), prompt injection through resumes/JDs/notes, and protected-characteristic refusals. It runs against the deterministic provider, in CI, with no network and no key.
+The behavioral suite (**docs/EVALUATIONS.md**) covers 23 named scenarios (the 22 planned behaviors plus a regression uncovered during browser acceptance) — grounding, tool selection, nonexistent/ambiguous entities, malformed arguments, unknown tools, step bounds, approval flows (reject = no mutation, approve = exactly once, replay = no-op), prompt injection through resumes/JDs/notes, and protected-characteristic refusals. It runs against the deterministic provider, in CI, with no network and no key.
 
 ## Using a real model (optional)
 

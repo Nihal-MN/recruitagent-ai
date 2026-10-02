@@ -53,13 +53,18 @@ function AgentChatContent() {
     api.conversations
       .list()
       .then((list) => {
-        if (active) setConversations(list);
+        if (!active) return;
+        setConversations(list);
+        // Restore the most recent conversation so context survives reloads.
+        if (list.length > 0) {
+          openConversation(list[0].id);
+        }
       })
       .catch(() => undefined);
     return () => {
       active = false;
     };
-  }, []);
+  }, [openConversation]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

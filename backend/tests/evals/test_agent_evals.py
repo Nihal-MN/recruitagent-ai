@@ -283,3 +283,14 @@ def test_eval_22_final_answer_grounded_in_observations(db):
         if name in outcome.final_text:
             return
     raise AssertionError("final answer did not name any seeded DevOps candidate")
+
+
+def test_eval_23_move_by_full_name_targets_that_candidate(db):
+    """Regression (found in browser acceptance): "Move Alex Meyer …" must resolve
+    Alex Meyer, not fall back to the context candidate."""
+    conv = conversations.create_conversation(db, "eval")
+    _turn(db, "Find candidates for the Senior Backend Engineer role.", conv)
+    outcome, _ = _turn(db, "Move Alex Meyer to INTERVIEW.", conv)
+    assert outcome.approval_ids, "a write must propose an approval"
+    request = db.get(ApprovalRequest, outcome.approval_ids[0])
+    assert "Alex Meyer" in request.summary, f"wrong target: {request.summary}"

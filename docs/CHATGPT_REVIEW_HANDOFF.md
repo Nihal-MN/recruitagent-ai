@@ -14,7 +14,7 @@ An open-source recruiting operations agent with a human-in-the-loop control plan
 2. Writes (pipeline move, note) can never execute from the agent loop — only via a human approval, exactly once.
 3. A deterministic demo provider (no API key) that drives the same loop, tools, approvals and traces; OpenAI tool calling available behind one env var.
 4. An MCP server exposing reads + proposal-only writes.
-5. A 22-behavior eval suite incl. prompt-injection and idempotency; hermetic in CI.
+5. A 23-scenario eval suite (22 planned + 1 acceptance-discovered regression) incl. prompt-injection and idempotency; hermetic in CI.
 6. Full UI: agent chat + live trace, trace page, candidates, jobs, approvals, activity, health.
 
 ## §2 How to verify (15 minutes)
@@ -23,7 +23,7 @@ An open-source recruiting operations agent with a human-in-the-loop control plan
 git clone <repo> && cd recruitagent-ai
 docker compose up --build -d
 docker compose exec api uv run python -m app.seed
-cd backend && uv run pytest -v            # 73 tests incl. evals + MCP smoke
+cd backend && uv run pytest -v            # 74 tests incl. evals + MCP smoke
 ```
 
 Then in the UI (http://localhost:3000):

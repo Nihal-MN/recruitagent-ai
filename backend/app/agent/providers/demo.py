@@ -144,6 +144,41 @@ class DemoProvider:
                         )
                     )
                 return StepDecision(final_text=self._need_job_context())
+            if self._wants_move(low):
+                candidate = (obs[0].data or {}).get("id")
+                job_id = self._context_job_id(state)
+                stage = self._extract_stage(msg)
+                if stage is None:
+                    return StepDecision(
+                        final_text="Which stage should I move them to? One of: "
+                        + ", ".join(_STAGE_ORDER)
+                        + "."
+                    )
+                if candidate and job_id:
+                    return StepDecision(
+                        tool_call=ToolCall(
+                            "update_pipeline",
+                            {"candidate_id": candidate, "job_id": job_id, "to_stage": stage},
+                        )
+                    )
+                return StepDecision(final_text=self._need_job_context())
+            if self._wants_note(low):
+                candidate = (obs[0].data or {}).get("id")
+                body = self._extract_note_body(msg)
+                if body is None:
+                    return StepDecision(
+                        final_text="What should the note say? Example: "
+                        'add a note "Strong systems depth."'
+                    )
+                if candidate:
+                    return StepDecision(
+                        tool_call=ToolCall(
+                            "add_candidate_note", {"candidate_id": candidate, "body": body}
+                        )
+                    )
+                return StepDecision(
+                    final_text="Which candidate is the note for? Name one or search first."
+                )
             return StepDecision(final_text=self._candidate_profile_summary(obs[0]))
 
         if len(obs) == 1 and obs[0].tool == "match_candidate" and obs[0].ok:
@@ -324,12 +359,46 @@ class DemoProvider:
         )
         if trigger:
             return trigger.group(1)
-        names = _NAME_RE.findall(msg)
-        stop = {"The", "This", "That", "For", "Find", "Show", "Move", "Add", "Please", "Why", "And"}
-        for name in names:
-            first = name.split()[0]
-            if first not in stop:
-                return name
+        stop = {
+            "The",
+            "This",
+            "That",
+            "For",
+            "Find",
+            "Show",
+            "Move",
+            "Add",
+            "Please",
+            "Why",
+            "And",
+            "Update",
+            "Set",
+            "Change",
+            "Promote",
+            "Advance",
+            "Hire",
+            "Reject",
+            "Search",
+            "Get",
+            "Open",
+            "View",
+            "Put",
+            "Send",
+            "Assign",
+            "Interview",
+            "Note",
+        }
+        for match in _NAME_RE.findall(msg):
+            words = match.split()
+            stripped = 0
+            while words and words[0] in stop:
+                words.pop(0)
+                stripped += 1
+            if len(words) >= 2:
+                return " ".join(words)
+            # A single word left after dropping a leading verb: "Move Chen …" → "Chen".
+            if words and stripped and len(words[0]) >= 3:
+                return words[0]
         return None
 
     def _extract_skill(self, low: str) -> str | None:
@@ -417,7 +486,8 @@ class DemoProvider:
         candidate_id = self._context_candidate_id(state)
         job_id = self._context_job_id(state)
         name = self._extract_name(state.user_message)
-        if name and candidate_id is None:
+        if name:
+            # An explicitly named candidate always wins over conversation context.
             return StepDecision(tool_call=ToolCall("get_candidate", {"identifier": name}))
         if candidate_id is None or job_id is None:
             return StepDecision(
@@ -435,7 +505,8 @@ class DemoProvider:
         body = self._extract_note_body(state.user_message)
         candidate_id = self._context_candidate_id(state)
         name = self._extract_name(state.user_message)
-        if name and candidate_id is None:
+        if name:
+            # An explicitly named candidate always wins over conversation context.
             return StepDecision(tool_call=ToolCall("get_candidate", {"identifier": name}))
         if candidate_id is None:
             return StepDecision(

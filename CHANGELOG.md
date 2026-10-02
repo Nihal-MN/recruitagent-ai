@@ -32,7 +32,7 @@ First public release: a complete, keyless-runnable human-in-the-loop recruiting 
 - Next.js console: Agent Chat with live tool-trace panel, Tool Trace, Candidates (+detail with evidence), Jobs (+requirements), Approvals, Activity timeline, System Health (explicit demo/live AI mode).
 
 **Quality**
-- 73 backend tests including a 22-behavior eval suite: grounding, entity errors, malformed args, unknown tools, step bounds, approvals lifecycle, replay/idempotency, resume/JD/note prompt injection, protected-characteristic refusal, MCP stdio smoke.
+- 74 backend tests including a 23-scenario eval suite (22 planned + 1 regression): grounding, entity errors, malformed args, unknown tools, step bounds, approvals lifecycle, replay/idempotency, resume/JD/note prompt injection, protected-characteristic refusal, MCP stdio smoke.
 - Frontend unit tests (markdown safety, API client, formatters).
 - CI: backend lint+tests, frontend lint/typecheck/tests/build, Docker image build. Dependabot configured.
 - Synthetic standalone dataset: 20 candidates, 5 jobs, pipeline states, notes (including a live injection example).

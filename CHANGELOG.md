@@ -37,4 +37,4 @@ First public release: a complete, keyless-runnable human-in-the-loop recruiting 
 - CI: backend lint+tests, frontend lint/typecheck/tests/build, Docker image build. Dependabot configured.
 - Synthetic standalone dataset: 20 candidates, 5 jobs, pipeline states, notes (including a live injection example).
 
-[0.1.0]: https://github.com/<you>/recruitagent-ai/releases/tag/v0.1.0
+[0.1.0]: https://github.com/Nihal-MN/recruitagent-ai/releases/tag/v0.1.0

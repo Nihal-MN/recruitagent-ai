@@ -4,7 +4,7 @@
 The agent reads, explains and proposes. Humans decide. Every consequential action passes through a backend-enforced approval with exactly-once execution — and the whole product works with **no API key**.
 
 ```bash
-git clone https://github.com/<you>/recruitagent-ai.git   # or Code → Download ZIP
+git clone https://github.com/Nihal-MN/recruitagent-ai.git   # or Code → Download ZIP
 cd recruitagent-ai
 cp .env.example .env
 docker compose up --build -d

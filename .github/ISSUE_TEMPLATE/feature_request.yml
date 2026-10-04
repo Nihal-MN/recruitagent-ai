@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a capability, improvement or new tool
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reminder of the project's one non-negotiable rule: **consequential writes always require human approval** (backend-enforced). Feature ideas that skip the approval gate won't be accepted — everything else is fair game.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the recruiter/developer pain, not just the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should happen? If this touches the agent, sketch the tool calls you'd expect.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - agent core (orchestrator, providers, policy)
+        - tools (new tool or contract change)
+        - approvals / audit
+        - MCP
+        - frontend
+        - evaluations
+        - docs / dx
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional)
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to work on this.
+          required: false

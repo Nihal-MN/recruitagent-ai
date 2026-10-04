@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Questions & how-to
+    url: https://github.com/Nihal-MN/recruitagent-ai/discussions
+    about: Ask in Discussions (Q&A) instead of opening an issue.
+  - name: 🔐 Security report
+    url: https://github.com/Nihal-MN/recruitagent-ai/security/advisories/new
+    about: Please report vulnerabilities privately, not as public issues.

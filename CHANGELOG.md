@@ -33,7 +33,7 @@ First public release: a complete, keyless-runnable human-in-the-loop recruiting 
 
 **Quality**
 - 74 backend tests including a 23-scenario eval suite (22 planned + 1 regression): grounding, entity errors, malformed args, unknown tools, step bounds, approvals lifecycle, replay/idempotency, resume/JD/note prompt injection, protected-characteristic refusal, MCP stdio smoke.
-- Frontend unit tests (markdown safety, API client, formatters).
+- Frontend unit tests — 11 (markdown safety, API client, formatters).
 - CI: backend lint+tests, frontend lint/typecheck/tests/build, Docker image build. Dependabot configured.
 - Synthetic standalone dataset: 20 candidates, 5 jobs, pipeline states, notes (including a live injection example).
 

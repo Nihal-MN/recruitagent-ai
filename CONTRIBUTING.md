@@ -26,7 +26,7 @@ Or the whole stack in Docker: `make up && make seed`.
 make test    && make test-frontend && make lint
 ```
 
-- Backend: `ruff` clean, `pytest` green (73 tests incl. evals + MCP smoke).
+- Backend: `ruff` clean, `pytest` green (74 tests incl. evals + MCP smoke).
 - Frontend: `eslint`, `tsc --noEmit`, `vitest`.
 - CI runs all of the above plus a Docker build on every push.
 

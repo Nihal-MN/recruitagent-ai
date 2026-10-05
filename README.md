@@ -77,7 +77,7 @@ More detail: [ARCHITECTURE.md](docs/ARCHITECTURE.md) · [AGENT_DESIGN.md](docs/A
 
 ```bash
 make test            # backend: 74 hermetic tests incl. the eval suite and an MCP stdio smoke test
-make test-frontend   # frontend: unit tests
+make test-frontend   # frontend: 11 unit tests (markdown safety, API client, formatters)
 ```
 
 The behavioral suite (**docs/EVALUATIONS.md**) covers 23 named scenarios (the 22 planned behaviors plus a regression uncovered during browser acceptance) — grounding, tool selection, nonexistent/ambiguous entities, malformed arguments, unknown tools, step bounds, approval flows (reject = no mutation, approve = exactly once, replay = no-op), prompt injection through resumes/JDs/notes, and protected-characteristic refusals. It runs against the deterministic provider, in CI, with no network and no key.
